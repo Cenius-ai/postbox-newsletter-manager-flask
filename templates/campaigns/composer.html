@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% import "partials/forms.html" as forms %}
+
+{% block title %}{{ values.subject or 'New campaign' }} · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Campaigns / {% if campaign %}{{ 'Sent' if is_sent else 'Draft' }}{% else %}New{% endif %}{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <div class="pagehead__row">
+    <div class="pagehead__lead">
+      <h1 class="pagehead__title">{{ values.subject or 'New campaign' }}</h1>
+      <p class="pagehead__meta">
+        {% if is_sent %}
+          Sent {{ campaign['sent_at']|humanize }} to “{{ campaign['list_name'] }}”. Read-only: the send log is the record.
+        {% elif campaign %}
+          Draft · saved {{ campaign['updated_at']|humanize }} · {{ recipient_count }} confirmed recipient{{ '' if recipient_count == 1 else 's' }} on the chosen list.
+        {% else %}
+          Markdown on the left, live preview on the right. Nothing is sent until you press Send.
+        {% endif %}
+      </p>
+    </div>
+    <div class="pagehead__actions">
+      {% if is_sent %}
+      <a class="btn btn--primary" href="{{ url_for('tracking.log', campaign_id=campaign['id']) }}">Open send log</a>
+      {% else %}
+      <a class="btn btn--quiet" href="{{ url_for('campaigns.index') }}">All campaigns</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+{% if is_sent %}
+<div class="notice notice--info" role="status">This campaign has been sent. Fields are read-only, and a second send is refused server-side.</div>
+{% endif %}
+
+<div class="composer">
+  <form id="campaign-form" class="composer__form" method="post" action="{% if campaign %}{{ url_for('campaigns.edit', campaign_id=campaign['id']) }}{% else %}{{ url_for('campaigns.create') }}{% endif %}" novalidate data-validate data-guard data-busy-label="Saving…">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {{ forms.field('subject', 'Subject', values.subject, errors.subject, autocomplete='off', placeholder='Issue 43 — The tools we keep coming back to', locked=is_sent) }}
+    {{ forms.field('from_name', 'From name', values.from_name, errors.from_name, autocomplete='off', placeholder='Slow Web Weekly', locked=is_sent) }}
+
+    {% if lists %}
+      {{ forms.list_select('list_id', 'Target list', lists, values.list_id, errors.list_id, locked=is_sent) }}
+    {% else %}
+      <p class="panel__empty">You need a list before you can send. <a href="{{ url_for('lists.index') }}">Create the first list</a>.</p>
+    {% endif %}
+
+    {{ forms.textarea('body_markdown', 'Body (Markdown)', values.body_markdown, errors.body_markdown, rows=18, hint='Headings, lists, bold, italic, code and links. Raw HTML is escaped and renders as text.', locked=is_sent) }}
+
+    {% if not is_sent %}
+    <div class="formactions">
+      <button class="btn btn--primary" type="submit">{% if campaign %}Save changes{% else %}Save draft{% endif %}</button>
+      <a class="btn btn--quiet" href="{{ url_for('campaigns.index') if campaign else url_for('dashboard.index') }}">Cancel</a>
+    </div>
+    {% endif %}
+  </form>
+
+  <section class="preview" aria-label="Campaign preview">
+    <div class="preview__bar">
+      <h2 class="preview__title">Preview</h2>
+      <div class="segmented" role="group" aria-label="Preview mode">
+        <button class="segmented__btn is-active" type="button" data-md-view="preview" aria-pressed="true">Rendered</button>
+        <button class="segmented__btn" type="button" data-md-view="raw" aria-pressed="false">Markdown</button>
+      </div>
+    </div>
+    <div class="preview__body" id="md-preview" data-md-preview>{{ preview_html }}</div>
+    <pre class="preview__raw" id="md-raw" hidden></pre>
+  </section>
+</div>
+
+{% if campaign and not is_sent %}
+<div class="dangerbar">
+  <form method="post" action="{{ url_for('sending.send', campaign_id=campaign['id']) }}" data-guard data-busy-label="Sending…">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn--primary" type="submit"{% if recipient_count == 0 %} disabled{% endif %}>Send campaign now</button>
+    <span class="hint">{% if recipient_count %}Final: this goes to {{ recipient_count }} confirmed recipient{{ '' if recipient_count == 1 else 's' }} and cannot be unsent.{% else %}No confirmed recipients on this list yet.{% endif %}</span>
+  </form>
+  <form method="post" action="{{ url_for('campaigns.delete', campaign_id=campaign['id']) }}" data-guard data-confirm="Delete this draft?">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn--danger" type="submit">Delete draft</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

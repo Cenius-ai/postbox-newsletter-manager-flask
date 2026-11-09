@@ -1,0 +1,34 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Unsubscribe · Postbox Newsletter Manager{% endblock %}
+
+{% block content %}
+<div class="auth auth--single">
+  <section class="auth__card auth__card--wide">
+    {% if state == 'pending' %}
+      <p class="eyebrow">Unsubscribe</p>
+      <h1 class="card__title">Unsubscribe {{ send['email'] }}?</h1>
+      <p class="lede lede--small">This removes <strong>{{ send['email'] }}</strong> from “{{ send['list_name'] }}”. No further campaigns will arrive.</p>
+      <form method="post" data-guard data-busy-label="Unsubscribing…">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn--primary btn--block" type="submit">Confirm unsubscribe</button>
+      </form>
+    {% elif state == 'success' %}
+      <p class="eyebrow">Unsubscribed</p>
+      <h1 class="card__title">You are unsubscribed</h1>
+      <p class="lede lede--small">{{ send['email'] }} was removed from “{{ send['list_name'] }}” and the campaign count was updated. No further campaigns will arrive.</p>
+      <a class="btn btn--block" href="{{ url_for('dashboard.root') }}">Open Postbox</a>
+    {% elif state == 'already' %}
+      <p class="eyebrow">Already unsubscribed</p>
+      <h1 class="card__title">This address is already unsubscribed</h1>
+      <p class="lede lede--small">{{ send['email'] }} was unsubscribed {{ send['unsubscribed_at']|humanize }} from “{{ send['list_name'] }}”. Nothing else is needed.</p>
+      <a class="btn btn--block" href="{{ url_for('dashboard.root') }}">Open Postbox</a>
+    {% else %}
+      <p class="eyebrow">Invalid link</p>
+      <h1 class="card__title">This unsubscribe link is not valid</h1>
+      <p class="lede lede--small">The recipient may have been deleted from the list, which removes its unsubscribe link too.</p>
+      <a class="btn btn--block" href="{{ url_for('dashboard.root') }}">Go to Postbox</a>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

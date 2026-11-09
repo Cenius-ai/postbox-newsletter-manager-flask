@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "partials/forms.html" as forms %}
+
+{% block title %}Import subscribers · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Lists / {{ list_row['name'] }} / Import{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <h1 class="pagehead__title">Import subscribers</h1>
+  <p class="pagehead__meta">Into “{{ list_row['name'] }}”. Addresses already on the list are merged, never duplicated.</p>
+</header>
+
+{% if errors %}
+<ul class="form-errors" role="alert">
+  {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<div class="grid grid--7-5">
+  <section class="panel">
+    <form method="post" enctype="multipart/form-data" data-guard data-busy-label="Importing…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ forms.textarea('csv_text', 'Paste CSV', pasted, '', hint='Header row first, then one address per line.', rows=12, required=false) }}
+
+      <div class="field">
+        <label class="field__label" for="csv_file">…or choose a <code>.csv</code> file</label>
+        <input class="field__input" id="csv_file" name="csv_file" type="file" accept=".csv,text/csv">
+        <p class="field__hint">Up to {{ max_rows }} rows and 2 MB per import.</p>
+      </div>
+
+      <div class="formactions">
+        <button class="btn btn--primary" type="submit">Import subscribers</button>
+        <a class="btn btn--quiet" href="{{ url_for('lists.detail', list_id=list_row['id']) }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <aside class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Expected format</h2>
+    </div>
+    <pre class="codeblock">email,name
+marta.nowak@example.com,Marta Nowak
+felix.braun@example.com,</pre>
+    <ul class="bullets">
+      <li>The first row is a header; only <code>email</code> is required, <code>name</code> is optional.</li>
+      <li>Matching is case-insensitive, so <code>Marta@…</code> merges into <code>marta@…</code>.</li>
+      <li>Confirmed subscribers stay confirmed, and unsubscribed addresses are never re-subscribed.</li>
+      <li>New addresses arrive as <strong>pending</strong> — they still need to confirm.</li>
+    </ul>
+  </aside>
+</div>
+{% endblock %}

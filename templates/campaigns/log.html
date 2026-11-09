@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Send log · {{ campaign['subject'] }} · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Campaigns / Send log{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <div class="pagehead__row">
+    <div class="pagehead__lead">
+      <h1 class="pagehead__title">{{ campaign['subject'] }}</h1>
+      <p class="pagehead__meta">
+        {% if campaign['sent_at'] %}
+          Sent {{ campaign['sent_at']|humanize }} to “{{ campaign['list_name'] }}”. Opens are recorded on the first pixel hit only.
+        {% else %}
+          This campaign is still a draft — nothing has been sent, so there is no log yet.
+        {% endif %}
+      </p>
+    </div>
+    <div class="pagehead__actions">
+      <a class="btn btn--quiet" href="{{ url_for('campaigns.edit', campaign_id=campaign['id']) }}">{{ 'View campaign' if campaign['sent_at'] else 'Back to the composer' }}</a>
+    </div>
+  </div>
+</header>
+
+{% if not campaign['sent_at'] %}
+<section class="empty">
+  <h2 class="empty__title">No send log for a draft</h2>
+  <p class="empty__body">A campaign only has a log once it has been sent. Open the composer and press Send when the list has confirmed subscribers.</p>
+  <div class="empty__actions">
+    <a class="btn btn--primary" href="{{ url_for('campaigns.edit', campaign_id=campaign['id']) }}">Open the composer</a>
+  </div>
+</section>
+{% else %}
+
+<section class="kpis" aria-label="Send totals">
+  <div class="kpi kpi--4">
+    <p class="kpi__label">Sent</p>
+    <p class="kpi__value">{{ totals.sent }}</p>
+    <p class="kpi__meta">recipient snapshots</p>
+  </div>
+  <div class="kpi kpi--4">
+    <p class="kpi__label">Opened</p>
+    <p class="kpi__value">{{ totals.opened }}</p>
+    <p class="kpi__meta">{{ (totals.opened * 100 // totals.sent) if totals.sent else 0 }}% open rate</p>
+  </div>
+  <div class="kpi kpi--4">
+    <p class="kpi__label">Unsubscribed</p>
+    <p class="kpi__value">{{ totals.unsubscribed }}</p>
+    <p class="kpi__meta">from this campaign</p>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel__head">
+    <h2 class="panel__title">Recipients</h2>
+    <p class="panel__meta">Each row has its own pixel and unsubscribe URL — open them here to demonstrate tracking without email.</p>
+  </div>
+
+  {% if recipients %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Address</th>
+        <th scope="col">Opened</th>
+        <th scope="col">Unsubscribed</th>
+        <th scope="col">Tracking</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for recipient in recipients %}
+      <tr>
+        <td data-label="Address">
+          <span class="table__strong">{{ recipient['email'] }}</span>
+          {% if recipient['name'] %}<span class="table__sub">{{ recipient['name'] }}</span>{% endif %}
+        </td>
+        <td data-label="Opened">
+          {% if recipient['opened_at'] %}
+            <span class="badge badge--confirmed">opened</span>
+            <span class="table__sub">{{ recipient['opened_at']|humanize }}</span>
+          {% else %}
+            <span class="badge badge--pending">not opened</span>
+          {% endif %}
+        </td>
+        <td data-label="Unsubscribed">
+          {% if recipient['unsubscribed_at'] %}
+            <span class="badge badge--unsubscribed">unsubscribed</span>
+            <span class="table__sub">{{ recipient['unsubscribed_at']|humanize }}</span>
+          {% else %}
+            <span class="badge badge--muted">subscribed</span>
+          {% endif %}
+        </td>
+        <td data-label="Tracking">
+          <div class="linkbox">
+            <label class="visually-hidden" for="pixel-{{ recipient['id'] }}">Tracking pixel for {{ recipient['email'] }}</label>
+            <input class="linkbox__input" id="pixel-{{ recipient['id'] }}" type="text" readonly value="{{ recipient['pixel_url'] }}">
+            <button class="btn btn--compact" type="button" data-copy data-copy-target="pixel-{{ recipient['id'] }}">Copy pixel</button>
+          </div>
+          <div class="linkbox">
+            <label class="visually-hidden" for="unsub-{{ recipient['id'] }}">Unsubscribe URL for {{ recipient['email'] }}</label>
+            <input class="linkbox__input" id="unsub-{{ recipient['id'] }}" type="text" readonly value="{{ recipient['unsubscribe_url'] }}">
+            <button class="btn btn--compact" type="button" data-copy data-copy-target="unsub-{{ recipient['id'] }}">Copy unsubscribe</button>
+          </div>
+          <div class="rowactions">
+            <a class="btn btn--compact btn--quiet" href="{{ recipient['pixel_url'] }}" target="_blank" rel="noopener noreferrer">Open pixel</a>
+            <a class="btn btn--compact btn--quiet" href="{{ recipient['unsubscribe_url'] }}">Open unsubscribe page</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="panel__empty">This send had no recipients. That should not happen — the send refuses to run without confirmed subscribers.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

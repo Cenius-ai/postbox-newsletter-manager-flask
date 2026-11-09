@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Campaigns{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <div class="pagehead__row">
+    <div class="pagehead__lead">
+      <h1 class="pagehead__title">Campaigns</h1>
+      <p class="pagehead__meta">A draft is editable until its first send. After that the send log is the record of what went out.</p>
+    </div>
+    <div class="pagehead__actions">
+      <a class="btn btn--primary" href="{{ url_for('campaigns.create') }}">New campaign</a>
+    </div>
+  </div>
+</header>
+
+{% if total == 0 %}
+<section class="empty">
+  <h2 class="empty__title">No campaigns yet</h2>
+  <p class="empty__body">Write one in Markdown, preview it, then send it to the confirmed subscribers on a list.</p>
+  <div class="empty__actions">
+    <a class="btn btn--primary" href="{{ url_for('campaigns.create') }}">Compose the first campaign</a>
+  </div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel__head">
+    <h2 class="panel__title">Drafts</h2>
+    <p class="panel__meta">{{ drafts|length }} draft{{ '' if drafts|length == 1 else 's' }}</p>
+  </div>
+
+  {% if drafts %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Campaign</th>
+        <th scope="col">List</th>
+        <th scope="col">Saved</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for campaign in drafts %}
+      <tr>
+        <td data-label="Campaign">
+          <a class="table__link" href="{{ url_for('campaigns.edit', campaign_id=campaign['id']) }}">{{ campaign['subject'] }}</a>
+          <span class="table__sub">From {{ campaign['from_name'] }}</span>
+        </td>
+        <td data-label="List">{{ campaign['list_name'] }}</td>
+        <td data-label="Saved">{{ campaign['created_at']|humanize }}</td>
+        <td data-label="Actions">
+          <div class="rowactions">
+            <a class="btn btn--compact" href="{{ url_for('campaigns.edit', campaign_id=campaign['id']) }}">Edit</a>
+            {% if campaign['confirmed_on_list'] %}
+            <form method="post" action="{{ url_for('sending.send', campaign_id=campaign['id']) }}" data-guard data-busy-label="Sending…">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn--compact btn--primary" type="submit">Send to {{ campaign['confirmed_on_list'] }}</button>
+            </form>
+            {% else %}
+            <span class="hint">No confirmed recipients</span>
+            {% endif %}
+            <form method="post" action="{{ url_for('campaigns.delete', campaign_id=campaign['id']) }}" data-guard data-confirm="Delete this draft?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn--compact btn--danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="panel__empty">No drafts. <a href="{{ url_for('campaigns.create') }}">Start a campaign</a> whenever you are ready.</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel__head">
+    <h2 class="panel__title">Sent</h2>
+    <p class="panel__meta">{{ sent|length }} sent</p>
+  </div>
+
+  {% if sent %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Campaign</th>
+        <th scope="col">Sent</th>
+        <th scope="col" class="num">Recipients</th>
+        <th scope="col" class="num">Opened</th>
+        <th scope="col" class="num">Unsub.</th>
+        <th scope="col">Log</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for campaign in sent %}
+      <tr>
+        <td data-label="Campaign">
+          <span class="table__strong">{{ campaign['subject'] }}</span>
+          <span class="table__sub">{{ campaign['list_name'] }} · from {{ campaign['from_name'] }}</span>
+        </td>
+        <td data-label="Sent">{{ campaign['sent_at']|humanize }}</td>
+        <td data-label="Recipients" class="num">{{ campaign['recipients'] }}</td>
+        <td data-label="Opened" class="num">{{ campaign['opened'] }}</td>
+        <td data-label="Unsub." class="num">{{ campaign['unsubscribed'] }}</td>
+        <td data-label="Log"><a class="btn btn--compact" href="{{ url_for('tracking.log', campaign_id=campaign['id']) }}">Send log</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="panel__empty">Nothing has been sent yet. Open a draft and press Send when the list has confirmed subscribers.</p>
+  {% endif %}
+</section>
+{% endblock %}

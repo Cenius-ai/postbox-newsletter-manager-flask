@@ -1,0 +1,43 @@
+{% extends "public/base_public.html" %}
+{% import "partials/forms.html" as forms %}
+
+{% block title %}Sign in · Postbox Newsletter Manager{% endblock %}
+
+{% block content %}
+<div class="auth">
+  <section class="auth__intro">
+    <h1 class="display">Postbox.</h1>
+    <p class="lede">A self-hosted newsletter tool for bloggers and small open-source projects: your lists, your double opt-in, your send log — in one SQLite file.</p>
+    <ul class="hanglist">
+      <li data-mark="01">Subscriber lists with double opt-in tokens</li>
+      <li data-mark="02">A Markdown composer with a live preview</li>
+      <li data-mark="03">Send log with opens and unsubscribes</li>
+      <li data-mark="04">CSV import that merges duplicate addresses</li>
+    </ul>
+  </section>
+
+  <section class="auth__card">
+    <h2 class="card__title">Sign in</h2>
+
+    {% if errors.form %}
+      <p class="form-error" role="alert">{{ errors.form }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate data-validate data-guard data-busy-label="Signing in…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ forms.field('email', 'Email', identifier, errors.email, type='email', autocomplete='username', placeholder='you@example.com') }}
+      {{ forms.password('password', 'Password', errors.password, autocomplete='current-password') }}
+      <button class="btn btn--primary btn--block" type="submit">Sign in</button>
+    </form>
+
+    <div class="demo">
+      <p class="demo__label">Demo account</p>
+      <p class="demo__creds"><code>cenius@cenius.ai</code><span aria-hidden="true">/</span><code>cenius</code></p>
+      <p class="demo__hint">Demo: cenius@cenius.ai / cenius</p>
+      <button class="btn btn--compact" type="button" data-demo-fill data-email="cenius@cenius.ai" data-password="cenius">Sign in with the demo account</button>
+    </div>
+
+    <p class="auth__alt">No account yet? <a href="{{ url_for('auth.register') }}">Create one</a></p>
+  </section>
+</div>
+{% endblock %}

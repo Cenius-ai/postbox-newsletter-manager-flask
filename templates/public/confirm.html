@@ -1,0 +1,44 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Confirm subscription · Postbox Newsletter Manager{% endblock %}
+
+{% block content %}
+<div class="auth auth--single">
+  <section class="auth__card auth__card--wide">
+    {% if state == 'pending' %}
+      <p class="eyebrow">Double opt-in</p>
+      <h1 class="card__title">Confirm subscription</h1>
+      <p class="lede lede--small">Confirm <strong>{{ subscriber['email'] }}</strong> for the list <strong>{{ subscriber['list_name'] }}</strong>.</p>
+      <p class="hint">Postbox only sends campaigns to confirmed addresses, and this link works once.</p>
+      <form method="post" data-guard data-busy-label="Confirming…">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn--primary btn--block" type="submit">Confirm subscription</button>
+      </form>
+    {% elif state == 'success' %}
+      <p class="eyebrow">Confirmed</p>
+      <h1 class="card__title">You are on the list</h1>
+      <p class="lede lede--small">{{ subscriber['email'] }} is now confirmed for “{{ subscriber['list_name'] }}”. You can close this page.</p>
+      <a class="btn btn--primary btn--block" href="{{ url_for('dashboard.root') }}">Open Postbox</a>
+    {% elif state == 'confirmed' %}
+      <p class="eyebrow">Already confirmed</p>
+      <h1 class="card__title">This address is already confirmed</h1>
+      <p class="lede lede--small">
+        <strong>{{ subscriber['email'] }}</strong> is already confirmed for “{{ subscriber['list_name'] }}”
+        {%- if subscriber['confirmed_at'] %} ({{ subscriber['confirmed_at']|humanize }}){% endif %} —
+        nothing else is needed. This link does not confirm twice.
+      </p>
+      <a class="btn btn--block" href="{{ url_for('dashboard.root') }}">Open Postbox</a>
+    {% elif state == 'expired' %}
+      <p class="eyebrow">Expired link</p>
+      <h1 class="card__title">This confirmation link has expired</h1>
+      <p class="lede lede--small">Confirmation links last seven days. The owner of “{{ subscriber['list_name'] }}” can reissue one from the list page — open the list, find the pending address and press <strong>Resend</strong>.</p>
+      <a class="btn btn--block" href="{{ url_for('dashboard.root') }}">Open Postbox</a>
+    {% else %}
+      <p class="eyebrow">Invalid link</p>
+      <h1 class="card__title">This confirmation link is not valid</h1>
+      <p class="lede lede--small">It may have been replaced by a newer link, or the subscriber was removed. Ask the list owner to reissue a confirmation link from the list page.</p>
+      <a class="btn btn--block" href="{{ url_for('dashboard.root') }}">Go to Postbox</a>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

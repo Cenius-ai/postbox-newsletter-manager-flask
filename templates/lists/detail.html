@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% import "partials/forms.html" as forms %}
+
+{% block title %}{{ list_row['name'] }} · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Lists / {{ list_row['name'] }}{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <div class="pagehead__row">
+    <div class="pagehead__lead">
+      <h1 class="pagehead__title">{{ list_row['name'] }}</h1>
+      <p class="pagehead__meta">{{ list_row['description'] or 'No description yet.' }}</p>
+    </div>
+    <div class="pagehead__actions">
+      <a class="btn btn--primary" href="{{ url_for('importer.import_csv', list_id=list_row['id']) }}">Import CSV</a>
+      <a class="btn btn--quiet" href="{{ url_for('campaigns.create') }}">Compose campaign</a>
+    </div>
+  </div>
+  <dl class="counts">
+    <div><dt>Confirmed</dt><dd>{{ counts.confirmed }}</dd></div>
+    <div><dt>Pending</dt><dd>{{ counts.pending }}</dd></div>
+    <div><dt>Unsubscribed</dt><dd>{{ counts.unsubscribed }}</dd></div>
+    <div><dt>Total</dt><dd>{{ counts.total }}</dd></div>
+  </dl>
+</header>
+
+<div class="grid grid--8-4">
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Subscribers</h2>
+      <p class="panel__meta">{{ counts.total }} on this list</p>
+    </div>
+
+    {% if subscribers %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Address</th>
+          <th scope="col">Status</th>
+          <th scope="col">Added</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for subscriber in subscribers %}
+        <tr>
+          <td data-label="Address">
+            <span class="table__strong">{{ subscriber['email'] }}</span>
+            {% if subscriber['name'] %}<span class="table__sub">{{ subscriber['name'] }}</span>{% endif %}
+            {% if subscriber['confirm_url'] %}
+            <div class="linkbox">
+              <label class="visually-hidden" for="confirm-{{ subscriber['id'] }}">Confirmation link for {{ subscriber['email'] }}</label>
+              <input class="linkbox__input" id="confirm-{{ subscriber['id'] }}" type="text" readonly value="{{ subscriber['confirm_url'] }}">
+              <button class="btn btn--compact" type="button" data-copy data-copy-target="confirm-{{ subscriber['id'] }}">Copy link</button>
+            </div>
+            {% endif %}
+          </td>
+          <td data-label="Status">
+            <span class="badge badge--{{ subscriber['status'] }}">{{ subscriber['status'] }}</span>
+            {% if subscriber['status'] == 'confirmed' and subscriber['confirmed_at'] %}
+            <span class="table__sub">{{ subscriber['confirmed_at']|humanize }}</span>
+            {% elif subscriber['status'] == 'unsubscribed' and subscriber['unsubscribed_at'] %}
+            <span class="table__sub">{{ subscriber['unsubscribed_at']|humanize }}</span>
+            {% endif %}
+          </td>
+          <td data-label="Added">{{ subscriber['created_at']|humanize }}</td>
+          <td data-label="Actions">
+            <div class="rowactions">
+              {% if subscriber['status'] == 'pending' %}
+              <form method="post" action="{{ url_for('subscribers.resend_confirmation', subscriber_id=subscriber['id']) }}" data-guard data-busy-label="Reissuing…">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn--compact" type="submit">Resend</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('subscribers.delete', subscriber_id=subscriber['id']) }}" data-guard data-confirm="Remove {{ subscriber['email'] }} from this list?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn--compact btn--danger" type="submit">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty empty--inline">
+      <h3 class="empty__title">No subscribers yet</h3>
+      <p class="empty__body">Add someone manually with the form beside this panel, or bring across an existing audience in one go.</p>
+      <div class="empty__actions">
+        <a class="btn btn--primary" href="{{ url_for('importer.import_csv', list_id=list_row['id']) }}">Import CSV</a>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="stack">
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">Add a subscriber</h2>
+      </div>
+      <p class="panel__meta">They start as <strong>pending</strong> until the confirmation link is opened — copy it from the table.</p>
+      <form method="post" action="{{ url_for('subscribers.create', list_id=list_row['id']) }}" novalidate data-validate data-guard data-busy-label="Adding…">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ forms.field('email', 'Email', subscriber_values.email, errors.email, type='email', autocomplete='off', placeholder='reader@example.com', id='subscriber-email') }}
+        {{ forms.field('name', 'Name', subscriber_values.name, errors.name, required=false, autocomplete='off', placeholder='Marta Nowak', id='subscriber-name') }}
+        <button class="btn btn--primary btn--block" type="submit">Add subscriber</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">List details</h2>
+      </div>
+      <form method="post" action="{{ url_for('lists.edit', list_id=list_row['id']) }}" novalidate data-validate data-guard data-busy-label="Saving…">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ forms.field('name', 'List name', edit_values.name, edit_errors.name, autocomplete='off', id='list-name') }}
+        {{ forms.textarea('description', 'Description', edit_values.description, edit_errors.description, rows=3, required=false, id='list-description') }}
+        <button class="btn btn--block" type="submit">Save details</button>
+      </form>
+
+      <form method="post" action="{{ url_for('lists.delete', list_id=list_row['id']) }}" class="dangerzone" data-guard data-confirm="Delete this list and every subscriber on it?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="field__label" for="confirm_name">Type <strong>{{ list_row['name'] }}</strong> to delete this list</label>
+        <input class="field__input" id="confirm_name" name="confirm_name" type="text" autocomplete="off" required>
+        <button class="btn btn--danger btn--block" type="submit">Delete list</button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

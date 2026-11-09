@@ -1,0 +1,27 @@
+{% extends "public/base_public.html" %}
+{% import "partials/forms.html" as forms %}
+
+{% block title %}Create an account · Postbox Newsletter Manager{% endblock %}
+
+{% block content %}
+<div class="auth auth--single">
+  <section class="auth__card">
+    <h1 class="card__title">Create an account</h1>
+    <p class="lede lede--small">Your lists stay private to this account. The demo account is separate.</p>
+
+    {% if errors.form %}
+      <p class="form-error" role="alert">{{ errors.form }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('auth.register') }}" novalidate data-validate data-guard data-busy-label="Creating account…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ forms.field('email', 'Email', values.email, errors.email, type='email', autocomplete='username', placeholder='you@example.com') }}
+      {{ forms.password('password', 'Password', errors.password, hint='At least ' ~ min_password ~ ' characters.', autocomplete='new-password') }}
+      {{ forms.field('display_name', 'Display name', values.display_name, errors.display_name, required=false, autocomplete='name', hint='Optional — shown in the sidebar.', placeholder='Marta Nowak') }}
+      <button class="btn btn--primary btn--block" type="submit">Create account</button>
+    </form>
+
+    <p class="auth__alt">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a> — the demo credentials are on that page.</p>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "public/base_public.html" %}
+
+{% block body_class %}page-app{% endblock %}
+
+{% block body %}
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="shell">
+  <aside class="rail">
+    <a class="wordmark wordmark--rail" href="{{ url_for('dashboard.index') }}">
+      <span class="wordmark__mark" aria-hidden="true">P</span>
+      <span class="wordmark__text">Postbox<small>Newsletter Manager</small></span>
+    </a>
+
+    <nav class="rail__nav" aria-label="Sections">
+      <a class="rail__link" href="{{ url_for('dashboard.index') }}"{% if request.endpoint and request.endpoint.startswith('dashboard.') %} aria-current="page"{% endif %}>Dashboard</a>
+      <a class="rail__link" href="{{ url_for('lists.index') }}"{% if request.endpoint and request.endpoint.startswith('lists.') %} aria-current="page"{% endif %}>Lists</a>
+      <a class="rail__link" href="{{ url_for('campaigns.index') }}"{% if request.endpoint and request.endpoint.startswith('campaigns.') %} aria-current="page"{% endif %}>Campaigns</a>
+    </nav>
+
+    <div class="rail__foot">
+      <p class="rail__identity">
+        <span class="rail__label">Signed in</span>
+        {{ current_user['display_name'] or current_user['email'] }}
+      </p>
+      <form method="post" action="{{ url_for('auth.logout') }}" class="rail__logout">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn--quiet btn--compact" type="submit">Log out</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="frame">
+    <header class="frame__bar">
+      <p class="frame__crumb">{% block crumb %}Dashboard{% endblock %}</p>
+      <a class="btn btn--primary btn--compact" href="{{ url_for('campaigns.create') }}">Compose campaign</a>
+    </header>
+    <main id="main" class="frame__main">
+      {% include "partials/flashes.html" %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="frame__foot">
+      <p>Postbox Newsletter Manager · SQLite at <code>instance/postbox.db</code></p>
+    </footer>
+  </div>
+</div>
+{% endblock %}

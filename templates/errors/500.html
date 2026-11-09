@@ -1,0 +1,14 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Something went wrong · Postbox Newsletter Manager{% endblock %}
+
+{% block content %}
+<section class="empty">
+  <p class="eyebrow">500</p>
+  <h1 class="pagehead__title">Something went wrong on our side</h1>
+  <p class="empty__body">The error was logged with a full traceback. Reload the page or go back to the dashboard; your data was not changed by a failed request.</p>
+  <div class="empty__actions">
+    <a class="btn btn--primary" href="{{ url_for('dashboard.root') }}">Go to Postbox</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" if current_user else "public/base_public.html" %}
+
+{% block title %}Request rejected · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Request rejected{% endblock %}
+
+{% block content %}
+<section class="empty">
+  <p class="eyebrow">400</p>
+  <h1 class="pagehead__title">That request could not be processed</h1>
+  <p class="empty__body">{{ message }}</p>
+  <p class="empty__body">Nothing was changed.</p>
+  <div class="empty__actions">
+    <a class="btn btn--primary" href="{{ url_for('dashboard.index') if current_user else url_for('auth.login') }}">{{ 'Back to the dashboard' if current_user else 'Go to sign in' }}</a>
+  </div>
+</section>
+{% endblock %}

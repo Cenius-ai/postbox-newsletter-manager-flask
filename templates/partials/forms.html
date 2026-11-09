@@ -1,0 +1,45 @@
+{% macro field(name, label, value='', error='', type='text', hint='', autocomplete='', required=true, placeholder='', inputmode='', locked=false, id='') -%}
+{% set field_id = id or name %}
+<div class="field{% if error %} field--invalid{% endif %}">
+  <label class="field__label" for="{{ field_id }}">{{ label }}{% if required and not locked %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <input class="field__input" id="{{ field_id }}" name="{{ name }}" type="{{ type }}" value="{{ value }}"{% if locked %} readonly{% elif required %} required{% endif %}{% if placeholder %} placeholder="{{ placeholder }}"{% endif %}{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}{% if inputmode %} inputmode="{{ inputmode }}"{% endif %}{% if error %} aria-invalid="true" aria-describedby="{{ field_id }}-error"{% endif %}>
+  {% if hint %}<p class="field__hint">{{ hint }}</p>{% endif %}
+  {% if error %}<p class="field__error" id="{{ field_id }}-error">{{ error }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro password(name, label, error='', hint='', autocomplete='current-password', required=true) -%}
+<div class="field{% if error %} field--invalid{% endif %}">
+  <label class="field__label" for="{{ name }}">{{ label }}{% if required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <div class="field__group">
+    <input class="field__input" id="{{ name }}" name="{{ name }}" type="password"{% if required %} required{% endif %}{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}{% if error %} aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>
+    <button class="btn btn--quiet btn--compact" type="button" data-password-toggle="{{ name }}" aria-controls="{{ name }}" aria-pressed="false">Show</button>
+  </div>
+  {% if hint %}<p class="field__hint">{{ hint }}</p>{% endif %}
+  {% if error %}<p class="field__error" id="{{ name }}-error">{{ error }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro textarea(name, label, value='', error='', hint='', rows=14, required=true, locked=false, placeholder='', id='') -%}
+{% set field_id = id or name %}
+<div class="field{% if error %} field--invalid{% endif %}">
+  <label class="field__label" for="{{ field_id }}">{{ label }}{% if required and not locked %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <textarea class="field__input field__input--area" id="{{ field_id }}" name="{{ name }}" rows="{{ rows }}"{% if locked %} readonly{% elif required %} required{% endif %}{% if placeholder %} placeholder="{{ placeholder }}"{% endif %}{% if error %} aria-invalid="true" aria-describedby="{{ field_id }}-error"{% endif %}>{{ value }}</textarea>
+  {% if hint %}<p class="field__hint">{{ hint }}</p>{% endif %}
+  {% if error %}<p class="field__error" id="{{ field_id }}-error">{{ error }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro list_select(name, label, options, selected='', error='', hint='', locked=false) -%}
+<div class="field{% if error %} field--invalid{% endif %}">
+  <label class="field__label" for="{{ name }}">{{ label }}{% if not locked %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <select class="field__input" id="{{ name }}" name="{{ name }}"{% if locked %} disabled{% else %} required{% endif %}{% if error %} aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>
+    <option value="">Choose a list…</option>
+    {% for option in options %}
+      <option value="{{ option['id'] }}"{% if selected|string == option['id']|string %} selected{% endif %}>{{ option['name'] }} — {{ option['confirmed'] }} confirmed</option>
+    {% endfor %}
+  </select>
+  {% if hint %}<p class="field__hint">{{ hint }}</p>{% endif %}
+  {% if error %}<p class="field__error" id="{{ name }}-error">{{ error }}</p>{% endif %}
+</div>
+{%- endmacro %}

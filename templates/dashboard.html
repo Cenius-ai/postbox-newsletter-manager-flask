@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Dashboard{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <h1 class="pagehead__title">Dashboard</h1>
+  <p class="pagehead__meta">Every number here is derived from the lists, subscribers and sends in this database — no cached counters to drift.</p>
+</header>
+
+{% if is_empty %}
+<section class="empty">
+  <h2 class="empty__title">Nothing to count yet</h2>
+  <p class="empty__body">Create a list, invite a subscriber and Postbox starts counting. If you just want to look around, sign back in with the demo account.</p>
+  <div class="empty__actions">
+    <a class="btn btn--primary" href="{{ url_for('lists.index') }}">Create a list</a>
+    <a class="btn" href="{{ url_for('campaigns.create') }}">Compose a campaign</a>
+    <a class="btn btn--quiet" href="{{ url_for('lists.index') }}">Import subscribers</a>
+  </div>
+</section>
+{% endif %}
+
+<section class="kpis" aria-label="Totals">
+  <div class="kpi kpi--3">
+    <p class="kpi__label">Lists</p>
+    <p class="kpi__value">{{ list_count }}</p>
+    <p class="kpi__meta">{{ subscriber_total }} subscriber{{ '' if subscriber_total == 1 else 's' }} in total</p>
+  </div>
+  <div class="kpi kpi--3">
+    <p class="kpi__label">Confirmed</p>
+    <p class="kpi__value">{{ subscriber_counts['confirmed'] }}</p>
+    <p class="kpi__meta">{{ subscriber_counts['pending'] }} pending · {{ subscriber_counts['unsubscribed'] }} unsubscribed</p>
+  </div>
+  <div class="kpi kpi--2">
+    <p class="kpi__label">Campaigns</p>
+    <p class="kpi__value">{{ campaign_counts['sent'] }}</p>
+    <p class="kpi__meta">sent · {{ campaign_counts['draft'] }} draft</p>
+  </div>
+  <div class="kpi kpi--2">
+    <p class="kpi__label">Opens</p>
+    <p class="kpi__value">{{ engagement['opened'] }}</p>
+    <p class="kpi__meta">{{ open_rate }}% of {{ engagement['sent'] }} sends</p>
+  </div>
+  <div class="kpi kpi--2">
+    <p class="kpi__label">Unsubscribes</p>
+    <p class="kpi__value">{{ engagement['unsubscribed'] }}</p>
+    <p class="kpi__meta">{{ unsubscribe_rate }}% of {{ engagement['sent'] }} sends</p>
+  </div>
+</section>
+
+<div class="grid grid--8-4">
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Recent sends</h2>
+      <a class="panel__link" href="{{ url_for('campaigns.index') }}">All campaigns</a>
+    </div>
+
+    {% if recent_sends %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Campaign</th>
+          <th scope="col">Sent</th>
+          <th scope="col" class="num">Recipients</th>
+          <th scope="col" class="num">Opened</th>
+          <th scope="col" class="num">Unsub.</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for campaign in recent_sends %}
+        <tr>
+          <td data-label="Campaign">
+            <a class="table__link" href="{{ url_for('tracking.log', campaign_id=campaign['id']) }}">{{ campaign['subject'] }}</a>
+            <span class="table__sub">{{ campaign['list_name'] }}</span>
+          </td>
+          <td data-label="Sent">{{ campaign['sent_at']|humanize }}</td>
+          <td data-label="Recipients" class="num">{{ campaign['sent'] }}</td>
+          <td data-label="Opened" class="num">{{ campaign['opened'] }}</td>
+          <td data-label="Unsub." class="num">{{ campaign['unsubscribed'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="panel__empty">No campaign has been sent yet. <a href="{{ url_for('campaigns.create') }}">Compose the first one</a>.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Latest confirmations</h2>
+      <a class="panel__link" href="{{ url_for('lists.index') }}">Lists</a>
+    </div>
+
+    {% if latest_confirmed %}
+    <ul class="stacklist">
+      {% for subscriber in latest_confirmed %}
+      <li class="stacklist__item">
+        <p class="stacklist__main">{{ subscriber['email'] }}</p>
+        <p class="stacklist__meta">{{ subscriber['name'] or 'No name' }} · {{ subscriber['list_name'] }} · {{ subscriber['confirmed_at']|humanize }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="panel__empty">No confirmed subscribers yet. Add one and copy its confirmation link from the list page.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel__head">
+    <h2 class="panel__title">Quick actions</h2>
+  </div>
+  <ul class="hanglist hanglist--links">
+    <li data-mark="+"><a href="{{ url_for('lists.index') }}">Create a list</a> — name an audience and start collecting addresses.</li>
+    <li data-mark="+"><a href="{{ url_for('campaigns.create') }}">Compose a campaign</a> — write Markdown, preview it, save a draft.</li>
+    <li data-mark="+"><a href="{{ url_for('lists.index') }}">Import subscribers</a> — the button lives on every list page.</li>
+  </ul>
+</section>
+{% endblock %}

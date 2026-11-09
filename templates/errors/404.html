@@ -1,0 +1,16 @@
+{% extends "base.html" if current_user else "public/base_public.html" %}
+
+{% block title %}Not found · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Not found{% endblock %}
+
+{% block content %}
+<section class="empty">
+  <p class="eyebrow">404</p>
+  <h1 class="pagehead__title">That page is not here</h1>
+  <p class="empty__body">The address may be mistyped, or the list or campaign was deleted. Everything else still works.</p>
+  <div class="empty__actions">
+    <a class="btn btn--primary" href="{{ url_for('dashboard.index') if current_user else url_for('auth.login') }}">{{ 'Back to the dashboard' if current_user else 'Go to sign in' }}</a>
+    {% if current_user %}<a class="btn btn--quiet" href="{{ url_for('lists.index') }}">Your lists</a>{% endif %}
+  </div>
+</section>
+{% endblock %}

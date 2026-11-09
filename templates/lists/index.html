@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% import "partials/forms.html" as forms %}
+
+{% block title %}Lists · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Lists{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <h1 class="pagehead__title">Lists</h1>
+  <p class="pagehead__meta">One list per audience. Counts update the moment a subscriber confirms, unsubscribes or is deleted.</p>
+</header>
+
+<div class="grid grid--5-7">
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">New list</h2>
+    </div>
+    <form method="post" action="{{ url_for('lists.create') }}" novalidate data-validate data-guard data-busy-label="Creating…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ forms.field('name', 'Name', values.name, errors.name, placeholder='The Slow Web — Weekly', autocomplete='off') }}
+      {{ forms.textarea('description', 'Description', values.description, errors.description, rows=3, required=false, hint='One or two lines readers would recognise.', placeholder='Friday essays on calmer software.') }}
+      <button class="btn btn--primary btn--block" type="submit">Create list</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Your lists</h2>
+      <p class="panel__meta">{{ lists|length }} total</p>
+    </div>
+
+    {% if lists %}
+    <ul class="ledger">
+      {% for list in lists %}
+      <li class="ledger__row">
+        <div class="ledger__main">
+          <h3 class="ledger__title"><a href="{{ url_for('lists.detail', list_id=list['id']) }}">{{ list['name'] }}</a></h3>
+          <p class="ledger__desc">{{ list['description'] or 'No description yet.' }}</p>
+        </div>
+        <dl class="ledger__stats">
+          <div><dt>Confirmed</dt><dd>{{ list['confirmed'] }}</dd></div>
+          <div><dt>Pending</dt><dd>{{ list['pending'] }}</dd></div>
+          <div><dt>Unsub.</dt><dd>{{ list['unsubscribed'] }}</dd></div>
+        </dl>
+        <div class="ledger__actions">
+          <a class="btn btn--compact" href="{{ url_for('lists.detail', list_id=list['id']) }}">Open list</a>
+          <a class="btn btn--compact btn--quiet" href="{{ url_for('importer.import_csv', list_id=list['id']) }}">Import CSV</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty empty--inline">
+      <h3 class="empty__title">No lists yet</h3>
+      <p class="empty__body">Name your first audience in the form beside this panel. You can rename it or delete it later.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

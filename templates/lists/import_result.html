@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Import result · Postbox Newsletter Manager{% endblock %}
+{% block crumb %}Lists / {{ list_row['name'] }} / Import{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <h1 class="pagehead__title">Import finished</h1>
+  <p class="pagehead__meta">Into “{{ list_row['name'] }}”. New addresses are pending until they confirm.</p>
+</header>
+
+<section class="kpis" aria-label="Import totals">
+  <div class="kpi kpi--4">
+    <p class="kpi__label">Imported</p>
+    <p class="kpi__value">{{ result.imported }}</p>
+    <p class="kpi__meta">new addresses, now pending</p>
+  </div>
+  <div class="kpi kpi--4">
+    <p class="kpi__label">Updated</p>
+    <p class="kpi__value">{{ result.updated }}</p>
+    <p class="kpi__meta">already on the list, merged</p>
+  </div>
+  <div class="kpi kpi--4">
+    <p class="kpi__label">Skipped</p>
+    <p class="kpi__value">{{ result.skipped|length }}</p>
+    <p class="kpi__meta">rows with no usable address</p>
+  </div>
+</section>
+
+{% if result.skipped %}
+<section class="panel">
+  <div class="panel__head">
+    <h2 class="panel__title">Skipped rows</h2>
+    <p class="panel__meta">Everything else imported cleanly.</p>
+  </div>
+  <table class="table">
+    <thead>
+      <tr><th scope="col" class="num">Line</th><th scope="col">Reason</th></tr>
+    </thead>
+    <tbody>
+      {% for row in result.skipped %}
+      <tr>
+        <td data-label="Line" class="num">{{ row.line }}</td>
+        <td data-label="Reason">{{ row.reason }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<div class="formactions">
+  <a class="btn btn--primary" href="{{ url_for('lists.detail', list_id=list_row['id']) }}">Back to the list</a>
+  <a class="btn btn--quiet" href="{{ url_for('importer.import_csv', list_id=list_row['id']) }}">Import another file</a>
+</div>
+{% endblock %}

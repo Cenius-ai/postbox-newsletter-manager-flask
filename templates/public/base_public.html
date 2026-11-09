@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ product_name }}{% endblock %}</title>
+  <meta name="description" content="Postbox Newsletter Manager: self-hosted subscriber lists with double opt-in, a Markdown campaign composer and an honest send log. One SQLite file, no external services.">
+  {% include "partials/assets.html" %}
+</head>
+<body class="{% block body_class %}page-public{% endblock %}">
+{% block body %}
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="public">
+    <header class="public__mast">
+      <a class="wordmark" href="{{ url_for('dashboard.root') }}">
+        <span class="wordmark__mark" aria-hidden="true">P</span>
+        <span class="wordmark__text">Postbox<small>Newsletter Manager</small></span>
+      </a>
+      <p class="public__purpose">Self-hosted lists, double opt-in and campaign sends.</p>
+    </header>
+    <main id="main" class="public__main">
+      {% include "partials/flashes.html" %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="public__foot">
+      <p>Postbox Newsletter Manager — one SQLite file, no external services.</p>
+    </footer>
+  </div>
+{% endblock %}
+</body>
+</html>
