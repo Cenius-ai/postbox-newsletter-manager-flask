@@ -44,7 +44,7 @@ See [`INSTALL.md`](INSTALL.md) for full setup and usage instructions.
 
 ## Architecture
 
-The repository contains 80 files of Flask source, organised under `app/`, `instance/`, `static/`, `templates/`, `tests/`, `tools/`. Starting up is just `./install.sh`: it installs what is needed and pre-fills the database so you have data to work with straight away. Full setup details: [`INSTALL.md`](INSTALL.md).
+The repository contains 67 files of Flask source, organised under `app/`, `instance/`, `static/`, `templates/`, `tests/`, `tools/`. Starting up is just `./install.sh`: it installs what is needed and pre-fills the database so you have data to work with straight away. Full setup details: [`INSTALL.md`](INSTALL.md).
 
 ## Usage guide
 
